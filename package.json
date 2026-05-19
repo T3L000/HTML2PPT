@@ -1,0 +1,28 @@
+{
+  "name": "html2ppt",
+  "version": "0.1.0",
+  "description": "Convert a controlled HTML slide protocol into editable PPTX decks.",
+  "type": "module",
+  "bin": {
+    "html2ppt": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "playwright": "^1.55.0",
+    "pptxgenjs": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "jszip": "^3.10.1",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
