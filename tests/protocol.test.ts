@@ -32,6 +32,25 @@ describe("validateHtmlProtocol", () => {
     expect(result.diagnostics).toEqual([]);
   });
 
+  test("accepts grouped editable elements with relative child geometry", () => {
+    const result = validateHtmlProtocol(`
+      <ppt-deck size="wide">
+        <ppt-slide>
+          <ppt-group style="left:100px;top:140px;width:520px;height:260px">
+            <ppt-shape kind="roundRect" style="left:0px;top:0px;width:520px;height:260px;background:#fff;border:1px solid #ddd"></ppt-shape>
+            <ppt-text style="left:28px;top:24px;width:440px;height:60px;font-size:28px;color:#111">Grouped card</ppt-text>
+            <ppt-list style="left:28px;top:96px;width:440px;height:120px;font-size:20px;color:#333">
+              <ppt-li>Relative list item</ppt-li>
+            </ppt-list>
+          </ppt-group>
+        </ppt-slide>
+      </ppt-deck>
+    `);
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+  });
+
   test("rejects decks without a ppt-deck root", () => {
     const result = validateHtmlProtocol(`<div><ppt-slide></ppt-slide></div>`);
 
@@ -121,6 +140,29 @@ describe("validateHtmlProtocol", () => {
         code: "invalid-parent",
         element: "ppt-li",
         path: "ppt-deck > ppt-slide > ppt-li"
+      })
+    );
+  });
+
+  test("rejects groups without explicit pixel geometry", () => {
+    const result = validateHtmlProtocol(`
+      <ppt-deck>
+        <ppt-slide>
+          <ppt-group style="left:10%;top:0px;width:400px;height:200px">
+            <ppt-text style="left:0px;top:0px;width:100px;height:30px">Nope</ppt-text>
+          </ppt-group>
+        </ppt-slide>
+      </ppt-deck>
+    `);
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-geometry",
+        element: "ppt-group",
+        property: "left",
+        value: "10%",
+        suggestion: expect.stringContaining("left:80px")
       })
     );
   });

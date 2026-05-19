@@ -18,7 +18,21 @@ V1 is an editable-first, controlled HTML protocol. It is not a general webpage r
 
 ## Elements
 
-All editable slide elements must be direct children of `ppt-slide` and must include explicit `left`, `top`, `width`, and `height` values in `px`.
+All editable slide elements must live directly inside `ppt-slide` or `ppt-group` and must include explicit `left`, `top`, `width`, and `height` values in `px`.
+
+### `ppt-group`
+
+Creates an authoring-only layout container. Group children use coordinates relative to the group in HTML, then html2ppt flattens them into editable PowerPoint objects with slide-level coordinates. This keeps PPT output editable while making complex cards and repeated blocks easier to author.
+
+Supported styles:
+
+- `left`, `top`, `width`, `height`
+
+Rules:
+
+- `ppt-group` must be a direct child of `ppt-slide` or another `ppt-group`.
+- `ppt-text`, `ppt-list`, `ppt-image`, `ppt-shape`, and nested `ppt-group` are supported inside `ppt-group`.
+- The group itself is not emitted as a PowerPoint object.
 
 ### `ppt-text`
 
@@ -106,4 +120,4 @@ CLI output prints suggestions as a second line:
 
 ## Example
 
-See `fixtures/showcase.html` for a multi-slide deck that uses titles, paragraphs, bullet lists, shapes, backgrounds, and inline styled runs.
+See `fixtures/showcase.html` for a multi-slide deck that uses titles, paragraphs, bullet lists, groups, shapes, backgrounds, and inline styled runs.

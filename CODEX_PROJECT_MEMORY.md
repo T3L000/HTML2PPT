@@ -4,15 +4,15 @@
 - Purpose: Build a TypeScript/Node html2ppt converter that maps a controlled HTML slide protocol into editable PPTX files.
 - Main stack: TypeScript, Node.js, Playwright, pptxgenjs, Vitest.
 - Important commands: Use `npm.cmd` on this Windows/PowerShell environment because `npm.ps1` is blocked by execution policy.
-- Current focus: Improve V1.2 diagnostics so humans and agents can fix invalid protocol HTML quickly.
+- Current focus: Improve V1.3 layout authoring with grouped relative positioning.
 
 ## User Preferences
 - User wants a practical converter because existing PPT-making skills/tools are not good enough.
 - Prefer editable PPT output over high-fidelity screenshot-only output.
 
 ## Stable Decisions
-- V1 uses a controlled custom HTML protocol: `ppt-deck`, `ppt-slide`, `ppt-text`, `ppt-list`, `ppt-li`, `ppt-image`, `ppt-shape`.
-- V1 supports only graphic/text/list layout, not tables, charts, animation, arbitrary webpages, or screenshot fallback.
+- V1 uses a controlled custom HTML protocol: `ppt-deck`, `ppt-slide`, `ppt-group`, `ppt-text`, `ppt-list`, `ppt-li`, `ppt-image`, `ppt-shape`.
+- V1 supports only graphic/text/list/group layout, not tables, charts, animation, arbitrary webpages, or screenshot fallback.
 - V1 strict mode reports unsupported tags/styles with actionable diagnostics, source line/column where available, and fix suggestions.
 
 ## Project Conventions
@@ -23,10 +23,11 @@
 - PowerShell cannot execute `npm.ps1`; call `npm.cmd`.
 
 ## Current State
-- V1.2 TypeScript package includes CLI, library API, protocol validation, Playwright layout extraction, pptxgenjs rendering, editable bullet lists, actionable diagnostics, tests, fixtures, and README/docs.
+- V1.3 TypeScript package includes CLI, library API, protocol validation, Playwright layout extraction, pptxgenjs rendering, editable bullet lists, grouped relative layout, actionable diagnostics, tests, fixtures, and README/docs.
 
 ## Recent Notes
 - 2026-05-19: Implementation started from the approved html2ppt plan.
 - 2026-05-19: Playwright Chromium runtime was installed into the user Playwright cache for local layout tests.
 - 2026-05-19: Added `ppt-list`/`ppt-li`, a multi-slide showcase fixture, and protocol documentation.
 - 2026-05-19: Added diagnostic line/column metadata and `suggestion` fix hints surfaced by the CLI.
+- 2026-05-19: Added `ppt-group` as an authoring-only relative layout container flattened into editable PPT objects.

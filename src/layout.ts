@@ -23,7 +23,6 @@ export const extractLayout = Object.assign(
         }
 
         const normalizeText = (value: string | null): string => (value ?? "").replace(/\s+/g, " ").trim();
-        const toNumber = (value: string): number => Number(value.replace("px", ""));
         const toHex = (value: string): string | undefined => {
           const normalized = value.trim();
           if (!normalized || normalized === "transparent" || normalized === "rgba(0, 0, 0, 0)") {
@@ -43,13 +42,14 @@ export const extractLayout = Object.assign(
           const raw = hex[1] ?? "";
           return (raw.length === 3 ? raw.split("").map((char) => char + char).join("") : raw).toUpperCase();
         };
-        const computedBox = (element: Element) => {
-          const style = window.getComputedStyle(element);
+        const computedBox = (element: Element, slide: Element) => {
+          const rect = element.getBoundingClientRect();
+          const slideRect = slide.getBoundingClientRect();
           return {
-            x: toNumber(style.left),
-            y: toNumber(style.top),
-            w: toNumber(style.width),
-            h: toNumber(style.height)
+            x: Number((rect.left - slideRect.left).toFixed(3)),
+            y: Number((rect.top - slideRect.top).toFixed(3)),
+            w: Number(rect.width.toFixed(3)),
+            h: Number(rect.height.toFixed(3))
           };
         };
         const textOptionsFor = (element: Element) => {
@@ -90,79 +90,94 @@ export const extractLayout = Object.assign(
           return runs.length > 0 ? runs : [{ text: normalizeText(root.textContent), options: textOptionsFor(root) }];
         };
 
+        const renderableTags = ["ppt-text", "ppt-list", "ppt-image", "ppt-shape"];
+        const layoutElement = (element: Element, slide: Element) => {
+          const tag = element.tagName.toLowerCase();
+          const box = computedBox(element, slide);
+          const style = window.getComputedStyle(element);
+
+          if (tag === "ppt-text") {
+            const fontSize = Number(style.fontSize.replace("px", ""));
+            const lineHeight = style.lineHeight === "normal" ? undefined : Number(style.lineHeight.replace("px", ""));
+            const align = (style.textAlign === "center" || style.textAlign === "right" ? style.textAlign : "left") as
+              | "left"
+              | "center"
+              | "right";
+            const runs = collectRuns(element);
+            return {
+              type: "text" as const,
+              text: normalizeText(element.textContent),
+              ...box,
+              style: {
+                ...textOptionsFor(element),
+                align,
+                lineSpacingMultiple: lineHeight && fontSize ? Number((lineHeight / fontSize).toFixed(3)) : undefined
+              },
+              runs
+            };
+          }
+
+          if (tag === "ppt-list") {
+            const fontSize = Number(style.fontSize.replace("px", ""));
+            const lineHeight = style.lineHeight === "normal" ? undefined : Number(style.lineHeight.replace("px", ""));
+            const bulletIndent = Number(style.paddingLeft.replace("px", ""));
+            return {
+              type: "list" as const,
+              ...box,
+              items: Array.from(element.querySelectorAll(":scope > ppt-li")).map((item) => ({
+                text: normalizeText(item.textContent),
+                runs: collectRuns(item)
+              })),
+              style: {
+                ...textOptionsFor(element),
+                lineSpacingMultiple: lineHeight && fontSize ? Number((lineHeight / fontSize).toFixed(3)) : undefined,
+                bulletIndent: Number.isNaN(bulletIndent) ? undefined : bulletIndent
+              }
+            };
+          }
+
+          if (tag === "ppt-image") {
+            return {
+              type: "image" as const,
+              src: element.getAttribute("src") ?? "",
+              fit: (element.getAttribute("fit") ?? "contain") as "contain" | "cover" | "fill",
+              ...box
+            };
+          }
+
+          const borderWidth = Number(style.borderLeftWidth.replace("px", ""));
+          return {
+            type: "shape" as const,
+            kind: (element.getAttribute("kind") ?? "rect") as "rect" | "roundRect" | "ellipse" | "line",
+            ...box,
+            fill: toHex(style.backgroundColor),
+            line:
+              borderWidth > 0
+                ? {
+                    color: toHex(style.borderLeftColor),
+                    width: borderWidth
+                  }
+                : undefined
+          };
+        };
+        const collectElements = (container: Element, slide: Element): Array<ReturnType<typeof layoutElement>> => {
+          const collected: Array<ReturnType<typeof layoutElement>> = [];
+          for (const child of Array.from(container.children)) {
+            const tag = child.tagName.toLowerCase();
+            if (tag === "ppt-group") {
+              collected.push(...collectElements(child, slide));
+              continue;
+            }
+            if (renderableTags.includes(tag)) {
+              collected.push(layoutElement(child, slide));
+            }
+          }
+          return collected;
+        };
+
         const slides = Array.from(deck.querySelectorAll(":scope > ppt-slide")).map((slide) => {
           const slideStyle = window.getComputedStyle(slide);
-          const elements = Array.from(slide.children)
-            .filter((element) => ["ppt-text", "ppt-list", "ppt-image", "ppt-shape"].includes(element.tagName.toLowerCase()))
-            .map((element) => {
-              const tag = element.tagName.toLowerCase();
-              const box = computedBox(element);
-              const style = window.getComputedStyle(element);
-
-              if (tag === "ppt-text") {
-                const fontSize = Number(style.fontSize.replace("px", ""));
-                const lineHeight = style.lineHeight === "normal" ? undefined : Number(style.lineHeight.replace("px", ""));
-                const align = (style.textAlign === "center" || style.textAlign === "right" ? style.textAlign : "left") as
-                  | "left"
-                  | "center"
-                  | "right";
-                const runs = collectRuns(element);
-                return {
-                  type: "text" as const,
-                  text: normalizeText(element.textContent),
-                  ...box,
-                  style: {
-                    ...textOptionsFor(element),
-                    align,
-                    lineSpacingMultiple: lineHeight && fontSize ? Number((lineHeight / fontSize).toFixed(3)) : undefined
-                  },
-                  runs
-                };
-              }
-
-              if (tag === "ppt-list") {
-                const fontSize = Number(style.fontSize.replace("px", ""));
-                const lineHeight = style.lineHeight === "normal" ? undefined : Number(style.lineHeight.replace("px", ""));
-                const bulletIndent = Number(style.paddingLeft.replace("px", ""));
-                return {
-                  type: "list" as const,
-                  ...box,
-                  items: Array.from(element.querySelectorAll(":scope > ppt-li")).map((item) => ({
-                    text: normalizeText(item.textContent),
-                    runs: collectRuns(item)
-                  })),
-                  style: {
-                    ...textOptionsFor(element),
-                    lineSpacingMultiple: lineHeight && fontSize ? Number((lineHeight / fontSize).toFixed(3)) : undefined,
-                    bulletIndent: Number.isNaN(bulletIndent) ? undefined : bulletIndent
-                  }
-                };
-              }
-
-              if (tag === "ppt-image") {
-                return {
-                  type: "image" as const,
-                  src: element.getAttribute("src") ?? "",
-                  fit: (element.getAttribute("fit") ?? "contain") as "contain" | "cover" | "fill",
-                  ...box
-                };
-              }
-
-              const borderWidth = Number(style.borderLeftWidth.replace("px", ""));
-              return {
-                type: "shape" as const,
-                kind: (element.getAttribute("kind") ?? "rect") as "rect" | "roundRect" | "ellipse" | "line",
-                ...box,
-                fill: toHex(style.backgroundColor),
-                line:
-                  borderWidth > 0
-                    ? {
-                        color: toHex(style.borderLeftColor),
-                        width: borderWidth
-                      }
-                    : undefined
-              };
-            });
+          const elements = collectElements(slide, slide);
 
           return {
             background: toHex(slideStyle.backgroundColor),
@@ -223,7 +238,7 @@ function wrapHtml(html: string): string {
         overflow: hidden;
         box-sizing: border-box;
       }
-      ppt-text, ppt-list, ppt-image, ppt-shape {
+      ppt-text, ppt-list, ppt-image, ppt-shape, ppt-group {
         display: block;
         position: absolute;
         box-sizing: border-box;

@@ -19,6 +19,10 @@ describe("extractLayout", () => {
           </ppt-list>
           <ppt-image src="data:image/png;base64,iVBORw0KGgo=" fit="cover" style="left:80px;top:220px;width:520px;height:300px"></ppt-image>
           <ppt-shape kind="ellipse" style="left:640px;top:220px;width:400px;height:300px;background:#f2f2f2;border:1px solid #ddd"></ppt-shape>
+          <ppt-group style="left:700px;top:420px;width:300px;height:160px">
+            <ppt-text style="left:20px;top:18px;width:240px;height:44px;font-family:Arial;font-size:22px;color:#123">Nested title</ppt-text>
+            <ppt-shape kind="rect" style="left:20px;top:80px;width:120px;height:48px;background:#ddeeff"></ppt-shape>
+          </ppt-group>
         </ppt-slide>
       </ppt-deck>
     `);
@@ -85,6 +89,23 @@ describe("extractLayout", () => {
       kind: "ellipse",
       fill: "F2F2F2",
       line: { color: "DDDDDD", width: 1 }
+    });
+    expect(deck.slides[0]?.elements[4]).toMatchObject({
+      type: "text",
+      text: "Nested title",
+      x: 720,
+      y: 438,
+      w: 240,
+      h: 44
+    });
+    expect(deck.slides[0]?.elements[5]).toMatchObject({
+      type: "shape",
+      kind: "rect",
+      x: 720,
+      y: 500,
+      w: 120,
+      h: 48,
+      fill: "DDEEFF"
     });
   });
 });

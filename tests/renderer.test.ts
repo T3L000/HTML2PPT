@@ -101,6 +101,27 @@ describe("convertHtmlToPptx", () => {
     expect(slideXml).toContain("<a:bu");
   });
 
+  test("flattens grouped elements into editable PPT objects", async () => {
+    const result = await convertHtmlToPptx({
+      html: `
+        <ppt-deck size="wide">
+          <ppt-slide>
+            <ppt-group style="left:120px;top:120px;width:500px;height:220px">
+              <ppt-shape kind="roundRect" style="left:0px;top:0px;width:500px;height:220px;background:#eef5ff;border:1px solid #aac2dd"></ppt-shape>
+              <ppt-text style="left:32px;top:28px;width:390px;height:60px;font-size:30px;color:#111">Grouped card</ppt-text>
+            </ppt-group>
+          </ppt-slide>
+        </ppt-deck>
+      `
+    });
+
+    const zip = await JSZip.loadAsync(result.buffer);
+    const slideXml = await zip.file("ppt/slides/slide1.xml")?.async("string");
+
+    expect(slideXml).toContain("Grouped card");
+    expect(slideXml).toContain("EEF5FF");
+  });
+
   test("reports missing local image assets", async () => {
     await expect(
       convertHtmlToPptx({

@@ -1,7 +1,17 @@
 import type { Diagnostic, ProtocolValidationResult } from "./types.js";
 
-const exportableTags = new Set(["ppt-text", "ppt-list", "ppt-image", "ppt-shape"]);
-const allowedTags = new Set(["ppt-deck", "ppt-slide", "ppt-text", "ppt-list", "ppt-li", "ppt-image", "ppt-shape", "span"]);
+const exportableTags = new Set(["ppt-text", "ppt-list", "ppt-image", "ppt-shape", "ppt-group"]);
+const allowedTags = new Set([
+  "ppt-deck",
+  "ppt-slide",
+  "ppt-text",
+  "ppt-list",
+  "ppt-li",
+  "ppt-image",
+  "ppt-shape",
+  "ppt-group",
+  "span"
+]);
 const voidTags = new Set(["ppt-image"]);
 
 const allowedStylesByTag: Record<string, Set<string>> = {
@@ -33,6 +43,7 @@ const allowedStylesByTag: Record<string, Set<string>> = {
     "line-height",
     "padding-left"
   ]),
+  "ppt-group": new Set(["left", "top", "width", "height"]),
   "ppt-li": new Set(["font-family", "font-size", "font-weight", "font-style", "color"]),
   "ppt-image": new Set(["left", "top", "width", "height"]),
   "ppt-shape": new Set([
@@ -84,11 +95,12 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
       diagnostics.push({
         severity: "error",
         code: "unsupported-element",
-        message: `Unsupported element <${token.name}>. V1 only supports ppt-deck, ppt-slide, ppt-text, ppt-list, ppt-li, ppt-image, ppt-shape, and span.`,
+        message: `Unsupported element <${token.name}>. V1 only supports ppt-deck, ppt-slide, ppt-text, ppt-list, ppt-li, ppt-image, ppt-shape, ppt-group, and span.`,
         element: token.name,
         path,
         ...locationFor(token),
-        suggestion: "Replace this tag with a supported ppt-* element, or pre-render that content into a supported text, image, shape, or list."
+        suggestion:
+          "Replace this tag with a supported ppt-* element, or pre-render that content into a supported text, image, shape, list, or group."
       });
     }
 
@@ -122,15 +134,15 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
       }
     }
 
-    if (exportableTags.has(token.name) && openStack.at(-1) !== "ppt-slide") {
+    if (exportableTags.has(token.name) && !["ppt-slide", "ppt-group"].includes(openStack.at(-1) ?? "")) {
       diagnostics.push({
         severity: "error",
         code: "invalid-parent",
-        message: `<${token.name}> must be a direct child of <ppt-slide>.`,
+        message: `<${token.name}> must be a direct child of <ppt-slide> or <ppt-group>.`,
         element: token.name,
         path,
         ...locationFor(token),
-        suggestion: `Move <${token.name}> so it is directly inside a <ppt-slide>.`
+        suggestion: `Move <${token.name}> so it is directly inside a <ppt-slide> or <ppt-group>.`
       });
     }
 

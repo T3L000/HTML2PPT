@@ -33,6 +33,12 @@ await convertHtmlToPptx({
     </ppt-text>
     <ppt-image src="./hero.png" fit="cover" style="left:80px;top:220px;width:520px;height:300px"></ppt-image>
     <ppt-shape kind="rect" style="left:640px;top:220px;width:400px;height:300px;background:#f2f2f2;border:1px solid #ddd"></ppt-shape>
+    <ppt-group style="left:80px;top:390px;width:520px;height:120px">
+      <ppt-shape kind="roundRect" style="left:0px;top:0px;width:520px;height:120px;background:#eef5ff;border:1px solid #aac2dd"></ppt-shape>
+      <ppt-text style="left:28px;top:28px;width:420px;height:48px;font-size:28px;color:#111">
+        Grouped editable card
+      </ppt-text>
+    </ppt-group>
     <ppt-list style="left:80px;top:540px;width:720px;height:120px;font-size:24px;color:#222;line-height:1.25">
       <ppt-li>Editable bullet item</ppt-li>
       <ppt-li>Inline <span style="font-weight:700;color:#c00">styled runs</span></ppt-li>
