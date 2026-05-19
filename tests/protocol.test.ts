@@ -16,6 +16,22 @@ describe("validateHtmlProtocol", () => {
     expect(result.diagnostics).toEqual([]);
   });
 
+  test("accepts editable bullet lists with styled list items", () => {
+    const result = validateHtmlProtocol(`
+      <ppt-deck size="wide">
+        <ppt-slide>
+          <ppt-list style="left:120px;top:180px;width:760px;height:260px;font-size:28px;color:#333;line-height:1.25;padding-left:28px">
+            <ppt-li>First item</ppt-li>
+            <ppt-li>Second <span style="font-weight:700;color:#c00">highlight</span></ppt-li>
+          </ppt-list>
+        </ppt-slide>
+      </ppt-deck>
+    `);
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+  });
+
   test("rejects decks without a ppt-deck root", () => {
     const result = validateHtmlProtocol(`<div><ppt-slide></ppt-slide></div>`);
 
@@ -82,6 +98,25 @@ describe("validateHtmlProtocol", () => {
         code: "invalid-geometry",
         property: "left",
         value: "10%"
+      })
+    );
+  });
+
+  test("rejects list items outside ppt-list", () => {
+    const result = validateHtmlProtocol(`
+      <ppt-deck>
+        <ppt-slide>
+          <ppt-li>Nope</ppt-li>
+        </ppt-slide>
+      </ppt-deck>
+    `);
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-parent",
+        element: "ppt-li",
+        path: "ppt-deck > ppt-slide > ppt-li"
       })
     );
   });

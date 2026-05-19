@@ -1,8 +1,9 @@
 import PptxGenJS from "pptxgenjs";
 import { resolveImageSource } from "./assets.js";
-import type { DeckLayout, ShapeElement, SlideElement, TextElement } from "./types.js";
+import type { DeckLayout, ListElement, ShapeElement, SlideElement, TextElement } from "./types.js";
 
 const pxPerInch = 96;
+const pointsPerPx = 0.75;
 const PptxGen = PptxGenJS as unknown as new () => PptxRuntime;
 
 interface PptxRuntime {
@@ -55,6 +56,11 @@ function renderElement(
     return;
   }
 
+  if (element.type === "list") {
+    renderList(slide, element);
+    return;
+  }
+
   if (element.type === "image") {
     const imageSource = resolveImageSource(element.src, baseDir);
     slide.addImage({
@@ -71,10 +77,53 @@ function renderElement(
     return;
   }
 
-  slide.addShape(shapeNameFor(pptx, element), {
+  const shapeOptions: Record<string, unknown> = {
     ...position(element),
-    fill: element.fill ? { color: element.fill } : { transparency: 100 },
     line: element.line ? { color: element.line.color, width: element.line.width } : { transparency: 100 }
+  };
+  if (element.kind !== "line") {
+    shapeOptions.fill = element.fill ? { color: element.fill } : { transparency: 100 };
+  }
+  slide.addShape(shapeNameFor(pptx, element), shapeOptions);
+}
+
+function renderList(slide: PptxSlide, element: ListElement): void {
+  const fontSize = element.style.fontSize ?? 18;
+  const lineSpacing = element.style.lineSpacingMultiple ?? 1.25;
+  const itemHeightPx = fontSize * lineSpacing;
+  const itemGapPx = Math.max(4, fontSize * 0.2);
+
+  element.items.forEach((item, index) => {
+    const y = (element.y + index * (itemHeightPx + itemGapPx)) / pxPerInch;
+    const options: Record<string, unknown> = {
+      ...position(element),
+      y,
+      h: itemHeightPx / pxPerInch,
+      fontFace: element.style.fontFace,
+      fontSize,
+      bold: element.style.bold,
+      italic: element.style.italic,
+      color: element.style.color,
+      bullet: {
+        type: "bullet",
+        indent: element.style.bulletIndent ? element.style.bulletIndent * pointsPerPx : undefined
+      },
+      fit: "shrink",
+      breakLine: false
+    };
+
+    if (item.runs.length > 1) {
+      slide.addText(
+        item.runs.map((run) => ({
+          text: run.text,
+          options: run.options
+        })),
+        options
+      );
+      return;
+    }
+
+    slide.addText(item.text, options);
   });
 }
 

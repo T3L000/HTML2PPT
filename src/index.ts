@@ -12,6 +12,8 @@ export type {
   DeckLayout,
   Diagnostic,
   ImageElement,
+  ListElement,
+  ListItem,
   ShapeElement,
   SlideElement,
   SlideLayout,

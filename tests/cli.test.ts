@@ -26,4 +26,23 @@ describe("CLI", () => {
     expect(stdout).toContain("Wrote");
     expect(stdout).toContain("1 slide");
   });
+
+  test("converts the multi-slide showcase fixture", async () => {
+    await rm("tmp/tests-cli", { recursive: true, force: true });
+    await mkdir("tmp/tests-cli", { recursive: true });
+    const outputPath = path.resolve("tmp/tests-cli/showcase.pptx");
+
+    await execFileAsync(cmd, ["/c", "npm.cmd", "run", "build"]);
+    const { stdout } = await execFileAsync("node", [
+      "dist/cli.js",
+      "fixtures/showcase.html",
+      "-o",
+      outputPath,
+      "--base-dir",
+      "."
+    ]);
+
+    expect(stdout).toContain("Wrote");
+    expect(stdout).toContain("3 slides");
+  });
 });

@@ -78,6 +78,29 @@ describe("convertHtmlToPptx", () => {
     expect(Object.keys(zip.files).some((name) => name.startsWith("ppt/media/image"))).toBe(true);
   });
 
+  test("writes editable bullet lists as native PPT text", async () => {
+    const result = await convertHtmlToPptx({
+      html: `
+        <ppt-deck size="wide">
+          <ppt-slide>
+            <ppt-list style="left:80px;top:120px;width:760px;height:220px;font-size:28px;color:#222;line-height:1.25">
+              <ppt-li>Editable bullets</ppt-li>
+              <ppt-li>Styled <span style="color:#c00;font-weight:700">runs</span></ppt-li>
+            </ppt-list>
+          </ppt-slide>
+        </ppt-deck>
+      `
+    });
+
+    const zip = await JSZip.loadAsync(result.buffer);
+    const slideXml = await zip.file("ppt/slides/slide1.xml")?.async("string");
+
+    expect(slideXml).toContain("Editable bullets");
+    expect(slideXml).toContain("Styled ");
+    expect(slideXml).toContain("runs");
+    expect(slideXml).toContain("<a:bu");
+  });
+
   test("reports missing local image assets", async () => {
     await expect(
       convertHtmlToPptx({

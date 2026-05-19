@@ -17,7 +17,7 @@ export interface ProtocolValidationResult {
 
 export type DeckSize = "wide";
 
-export type ElementType = "text" | "image" | "shape";
+export type ElementType = "text" | "image" | "shape" | "list";
 
 export interface Box {
   x: number;
@@ -52,6 +52,25 @@ export interface TextElement extends Box {
   runs: TextRun[];
 }
 
+export interface ListItem {
+  text: string;
+  runs: TextRun[];
+}
+
+export interface ListElement extends Box {
+  type: "list";
+  items: ListItem[];
+  style: {
+    fontFace?: string;
+    fontSize?: number;
+    bold?: boolean;
+    italic?: boolean;
+    color?: string;
+    lineSpacingMultiple?: number;
+    bulletIndent?: number;
+  };
+}
+
 export interface ImageElement extends Box {
   type: "image";
   src: string;
@@ -68,7 +87,7 @@ export interface ShapeElement extends Box {
   };
 }
 
-export type SlideElement = TextElement | ImageElement | ShapeElement;
+export type SlideElement = TextElement | ListElement | ImageElement | ShapeElement;
 
 export interface SlideLayout {
   background?: string;

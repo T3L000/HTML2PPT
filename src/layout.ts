@@ -93,7 +93,7 @@ export const extractLayout = Object.assign(
         const slides = Array.from(deck.querySelectorAll(":scope > ppt-slide")).map((slide) => {
           const slideStyle = window.getComputedStyle(slide);
           const elements = Array.from(slide.children)
-            .filter((element) => ["ppt-text", "ppt-image", "ppt-shape"].includes(element.tagName.toLowerCase()))
+            .filter((element) => ["ppt-text", "ppt-list", "ppt-image", "ppt-shape"].includes(element.tagName.toLowerCase()))
             .map((element) => {
               const tag = element.tagName.toLowerCase();
               const box = computedBox(element);
@@ -117,6 +117,25 @@ export const extractLayout = Object.assign(
                     lineSpacingMultiple: lineHeight && fontSize ? Number((lineHeight / fontSize).toFixed(3)) : undefined
                   },
                   runs
+                };
+              }
+
+              if (tag === "ppt-list") {
+                const fontSize = Number(style.fontSize.replace("px", ""));
+                const lineHeight = style.lineHeight === "normal" ? undefined : Number(style.lineHeight.replace("px", ""));
+                const bulletIndent = Number(style.paddingLeft.replace("px", ""));
+                return {
+                  type: "list" as const,
+                  ...box,
+                  items: Array.from(element.querySelectorAll(":scope > ppt-li")).map((item) => ({
+                    text: normalizeText(item.textContent),
+                    runs: collectRuns(item)
+                  })),
+                  style: {
+                    ...textOptionsFor(element),
+                    lineSpacingMultiple: lineHeight && fontSize ? Number((lineHeight / fontSize).toFixed(3)) : undefined,
+                    bulletIndent: Number.isNaN(bulletIndent) ? undefined : bulletIndent
+                  }
                 };
               }
 
@@ -204,10 +223,14 @@ function wrapHtml(html: string): string {
         overflow: hidden;
         box-sizing: border-box;
       }
-      ppt-text, ppt-image, ppt-shape {
+      ppt-text, ppt-list, ppt-image, ppt-shape {
         display: block;
         position: absolute;
         box-sizing: border-box;
+      }
+      ppt-li {
+        display: list-item;
+        list-style-position: outside;
       }
     </style>
   </head>

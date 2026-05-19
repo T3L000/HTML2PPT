@@ -1,7 +1,7 @@
 import type { Diagnostic, ProtocolValidationResult } from "./types.js";
 
-const exportableTags = new Set(["ppt-text", "ppt-image", "ppt-shape"]);
-const allowedTags = new Set(["ppt-deck", "ppt-slide", "ppt-text", "ppt-image", "ppt-shape", "span"]);
+const exportableTags = new Set(["ppt-text", "ppt-list", "ppt-image", "ppt-shape"]);
+const allowedTags = new Set(["ppt-deck", "ppt-slide", "ppt-text", "ppt-list", "ppt-li", "ppt-image", "ppt-shape", "span"]);
 const voidTags = new Set(["ppt-image"]);
 
 const allowedStylesByTag: Record<string, Set<string>> = {
@@ -20,6 +20,20 @@ const allowedStylesByTag: Record<string, Set<string>> = {
     "text-align",
     "line-height"
   ]),
+  "ppt-list": new Set([
+    "left",
+    "top",
+    "width",
+    "height",
+    "font-family",
+    "font-size",
+    "font-weight",
+    "font-style",
+    "color",
+    "line-height",
+    "padding-left"
+  ]),
+  "ppt-li": new Set(["font-family", "font-size", "font-weight", "font-style", "color"]),
   "ppt-image": new Set(["left", "top", "width", "height"]),
   "ppt-shape": new Set([
     "left",
@@ -68,7 +82,7 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
       diagnostics.push({
         severity: "error",
         code: "unsupported-element",
-        message: `Unsupported element <${token.name}>. V1 only supports ppt-deck, ppt-slide, ppt-text, ppt-image, ppt-shape, and span.`,
+        message: `Unsupported element <${token.name}>. V1 only supports ppt-deck, ppt-slide, ppt-text, ppt-list, ppt-li, ppt-image, ppt-shape, and span.`,
         element: token.name,
         path
       });
@@ -110,11 +124,21 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
       });
     }
 
-    if (token.name === "span" && !openStack.includes("ppt-text")) {
+    if (token.name === "ppt-li" && openStack.at(-1) !== "ppt-list") {
       diagnostics.push({
         severity: "error",
         code: "invalid-parent",
-        message: "<span> is only supported inside <ppt-text>.",
+        message: "<ppt-li> must be a direct child of <ppt-list>.",
+        element: token.name,
+        path
+      });
+    }
+
+    if (token.name === "span" && !openStack.includes("ppt-text") && !openStack.includes("ppt-li")) {
+      diagnostics.push({
+        severity: "error",
+        code: "invalid-parent",
+        message: "<span> is only supported inside <ppt-text> or <ppt-li>.",
         element: token.name,
         path
       });
@@ -230,6 +254,18 @@ function validateAttributes(token: ParsedTag, path: string, diagnostics: Diagnos
         path
       });
     }
+  }
+
+  if (token.name === "ppt-list" && style["padding-left"] && !isPixelLength(style["padding-left"], false)) {
+    diagnostics.push({
+      severity: "error",
+      code: "invalid-style-value",
+      message: "<ppt-list> padding-left must be expressed in px.",
+      element: token.name,
+      property: "padding-left",
+      value: style["padding-left"],
+      path
+    });
   }
 
   if (token.name === "ppt-shape") {

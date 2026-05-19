@@ -1,0 +1,95 @@
+# html2ppt V1 Protocol
+
+V1 is an editable-first, controlled HTML protocol. It is not a general webpage renderer. Unsupported HTML and CSS fail with diagnostics so an agent or developer can fix the source before generating a PPTX.
+
+## Document Shape
+
+```html
+<ppt-deck size="wide">
+  <ppt-slide>
+    ...
+  </ppt-slide>
+</ppt-deck>
+```
+
+- `ppt-deck` must be the single root element.
+- `ppt-slide` must be a direct child of `ppt-deck`.
+- The only supported deck size is `wide`, rendered as 1280x720 px and PowerPoint wide layout.
+
+## Elements
+
+All editable slide elements must be direct children of `ppt-slide` and must include explicit `left`, `top`, `width`, and `height` values in `px`.
+
+### `ppt-text`
+
+Creates an editable PowerPoint text box.
+
+Supported styles:
+
+- `left`, `top`, `width`, `height`
+- `font-family`, `font-size`, `font-weight`, `font-style`
+- `color`, `text-align`, `line-height`
+
+Inline `span` is supported for styled text runs inside `ppt-text`.
+
+### `ppt-list`
+
+Creates editable PowerPoint bullet text. Each `ppt-li` becomes a native bullet text box.
+
+Supported styles:
+
+- `left`, `top`, `width`, `height`
+- `font-family`, `font-size`, `font-weight`, `font-style`
+- `color`, `line-height`, `padding-left`
+
+Rules:
+
+- `ppt-li` must be a direct child of `ppt-list`.
+- Inline `span` is supported inside `ppt-li`.
+- `padding-left`, when present, must use `px` and controls bullet text indentation.
+
+### `ppt-image`
+
+Creates a native PowerPoint image object.
+
+Required attributes:
+
+- `src`
+
+Optional attributes:
+
+- `fit`: `contain`, `cover`, or `fill`
+
+Supported styles:
+
+- `left`, `top`, `width`, `height`
+
+### `ppt-shape`
+
+Creates a native PowerPoint shape.
+
+Optional attributes:
+
+- `kind`: `rect`, `roundRect`, `ellipse`, or `line`
+
+Supported styles:
+
+- `left`, `top`, `width`, `height`
+- `background`, `background-color`
+- `border`, `border-color`, `border-style`, `border-width`
+
+## Diagnostics
+
+Common errors:
+
+- `missing-deck`: the input does not contain a single `ppt-deck` root.
+- `missing-slide`: the deck has no slides.
+- `unsupported-element`: a tag is outside the V1 protocol.
+- `unsupported-style`: a CSS property or value is unsupported.
+- `invalid-parent`: an element is not in its required parent.
+- `invalid-geometry`: an editable element is missing explicit pixel geometry.
+- `missing-asset`: an image source is missing or cannot be read.
+
+## Example
+
+See `fixtures/showcase.html` for a multi-slide deck that uses titles, paragraphs, bullet lists, shapes, backgrounds, and inline styled runs.
