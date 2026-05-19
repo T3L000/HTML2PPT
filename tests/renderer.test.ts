@@ -122,6 +122,54 @@ describe("convertHtmlToPptx", () => {
     expect(slideXml).toContain("EEF5FF");
   });
 
+  test("renders template variables before layout extraction", async () => {
+    const result = await convertHtmlToPptx({
+      html: `
+        <ppt-deck size="wide">
+          <ppt-slide>
+            <ppt-text style="left:80px;top:60px;width:900px;height:120px;font-size:44px;color:#111">{{deck.title}}</ppt-text>
+            <ppt-list style="left:100px;top:180px;width:760px;height:160px;font-size:26px;color:#222">
+              <ppt-li>{{points.first}}</ppt-li>
+            </ppt-list>
+          </ppt-slide>
+        </ppt-deck>
+      `,
+      templateData: {
+        deck: { title: "Quarterly Review" },
+        points: { first: "Native editable output" }
+      }
+    });
+
+    const zip = await JSZip.loadAsync(result.buffer);
+    const slideXml = await zip.file("ppt/slides/slide1.xml")?.async("string");
+
+    expect(slideXml).toContain("Quarterly Review");
+    expect(slideXml).toContain("Native editable output");
+  });
+
+  test("reports missing template variables", async () => {
+    await expect(
+      convertHtmlToPptx({
+        html: `
+          <ppt-deck size="wide">
+            <ppt-slide>
+              <ppt-text style="left:80px;top:60px;width:900px;height:120px">{{missing.title}}</ppt-text>
+            </ppt-slide>
+          </ppt-deck>
+        `,
+        templateData: {}
+      })
+    ).rejects.toMatchObject({
+      diagnostics: [
+        expect.objectContaining({
+          code: "missing-template-value",
+          property: "missing.title",
+          suggestion: expect.stringContaining("templateData")
+        })
+      ]
+    });
+  });
+
   test("reports missing local image assets", async () => {
     await expect(
       convertHtmlToPptx({

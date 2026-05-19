@@ -67,4 +67,37 @@ describe("CLI", () => {
       stderr: expect.stringContaining("fix:")
     });
   });
+
+  test("renders a template with JSON data", async () => {
+    await rm("tmp/tests-cli", { recursive: true, force: true });
+    await mkdir("tmp/tests-cli", { recursive: true });
+    const inputPath = path.resolve("tmp/tests-cli/template.html");
+    const dataPath = path.resolve("tmp/tests-cli/data.json");
+    const outputPath = path.resolve("tmp/tests-cli/template.pptx");
+
+    await writeFile(
+      inputPath,
+      `<ppt-deck>
+  <ppt-slide>
+    <ppt-text style="left:80px;top:60px;width:900px;height:120px;font-size:44px">{{title}}</ppt-text>
+  </ppt-slide>
+</ppt-deck>`
+    );
+    await writeFile(dataPath, JSON.stringify({ title: "Template CLI Deck" }));
+
+    await execFileAsync(cmd, ["/c", "npm.cmd", "run", "build"]);
+    const { stdout } = await execFileAsync("node", [
+      "dist/cli.js",
+      inputPath,
+      "-o",
+      outputPath,
+      "--base-dir",
+      ".",
+      "--data",
+      dataPath
+    ]);
+
+    expect(stdout).toContain("Wrote");
+    expect(stdout).toContain("1 slide");
+  });
 });

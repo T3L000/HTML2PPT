@@ -107,6 +107,7 @@ export interface ConvertHtmlToPptxSource {
   html?: string;
   baseDir?: string;
   outputPath?: string;
+  templateData?: TemplateData;
 }
 
 export interface ConvertHtmlToPptxResult {
@@ -114,4 +115,10 @@ export interface ConvertHtmlToPptxResult {
   slideCount: number;
   diagnostics: Diagnostic[];
   writtenPath?: string;
+}
+
+export type TemplatePrimitive = string | number | boolean | null;
+export type TemplateValue = TemplatePrimitive | TemplateData | TemplateValue[];
+export interface TemplateData {
+  [key: string]: TemplateValue;
 }

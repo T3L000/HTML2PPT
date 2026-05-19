@@ -9,6 +9,7 @@ npm.cmd install
 npm.cmd run build
 node dist/cli.js fixtures/basic.html -o tmp/basic.pptx --base-dir .
 node dist/cli.js fixtures/showcase.html -o tmp/showcase.pptx --base-dir .
+node dist/cli.js fixtures/template.html -o tmp/template.pptx --data fixtures/template-data.json --base-dir .
 ```
 
 The package also exposes a library API:
@@ -19,7 +20,10 @@ import { convertHtmlToPptx } from "html2ppt";
 await convertHtmlToPptx({
   filePath: "deck.html",
   outputPath: "deck.pptx",
-  baseDir: "."
+  baseDir: ".",
+  templateData: {
+    title: "Quarterly Review"
+  }
 });
 ```
 
@@ -49,5 +53,6 @@ await convertHtmlToPptx({
 
 V1 is strict and editable-first. Unsupported elements and CSS properties fail with diagnostics instead of falling back to screenshots.
 CLI diagnostics include the error code, source line/column when available, protocol path, offending property/value, and a `fix:` suggestion.
+Template variables use `{{name}}` or `{{nested.value}}` and can be supplied with `--data data.json` or the library `templateData` option.
 
 See [docs/protocol-v1.md](docs/protocol-v1.md) for the supported tags, attributes, styles, and diagnostics.

@@ -1,0 +1,11 @@
+{
+  "deck": {
+    "title": "Template-Driven Deck",
+    "subtitle": "JSON data can fill repeated deck structures before PPTX rendering."
+  },
+  "card": {
+    "heading": "Reusable slide block",
+    "first": "Keep layout in HTML.",
+    "second": "Keep content in data."
+  }
+}

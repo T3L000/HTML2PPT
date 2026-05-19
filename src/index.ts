@@ -4,6 +4,7 @@ import { validateAssets } from "./assets.js";
 import { Html2PptError } from "./errors.js";
 import { extractLayout } from "./layout.js";
 import { renderPptx } from "./renderer.js";
+import { renderTemplate } from "./template.js";
 import type { ConvertHtmlToPptxResult, ConvertHtmlToPptxSource, Diagnostic } from "./types.js";
 
 export type {
@@ -17,14 +18,23 @@ export type {
   ShapeElement,
   SlideElement,
   SlideLayout,
+  TemplateData,
+  TemplatePrimitive,
+  TemplateValue,
   TextElement
 } from "./types.js";
 export { Html2PptError } from "./errors.js";
 export { extractLayout } from "./layout.js";
+export { renderTemplate } from "./template.js";
 export { validateHtmlProtocol } from "./protocol.js";
 
 export async function convertHtmlToPptx(source: ConvertHtmlToPptxSource): Promise<ConvertHtmlToPptxResult> {
-  const html = await loadHtml(source);
+  const loadedHtml = await loadHtml(source);
+  const template = renderTemplate(loadedHtml, source.templateData);
+  if (template.diagnostics.length > 0) {
+    throw new Html2PptError("Template rendering failed.", template.diagnostics);
+  }
+  const html = template.html;
   const baseDir = path.resolve(source.baseDir ?? (source.filePath ? path.dirname(source.filePath) : "."));
 
   let deck;

@@ -118,6 +118,40 @@ CLI output prints suggestions as a second line:
   fix: Set left with an explicit pixel value, for example left:80px.
 ```
 
+## Template Variables
+
+html2ppt can render simple scalar template variables before protocol validation and layout extraction.
+
+```html
+<ppt-text style="left:80px;top:60px;width:900px;height:120px">
+  {{deck.title}}
+</ppt-text>
+```
+
+CLI:
+
+```bash
+node dist/cli.js deck.html -o deck.pptx --data deck-data.json
+```
+
+Library:
+
+```ts
+await convertHtmlToPptx({
+  filePath: "deck.html",
+  templateData: {
+    deck: { title: "Quarterly Review" }
+  }
+});
+```
+
+Rules:
+
+- Supported paths use identifiers separated by dots, such as `{{title}}` or `{{deck.title}}`.
+- Values must resolve to string, number, boolean, or null.
+- Inserted values are HTML-escaped before layout extraction.
+- Missing or non-scalar values fail with `missing-template-value` diagnostics and `fix:` suggestions.
+
 ## Example
 
 See `fixtures/showcase.html` for a multi-slide deck that uses titles, paragraphs, bullet lists, groups, shapes, backgrounds, and inline styled runs.
