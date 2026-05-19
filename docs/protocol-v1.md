@@ -90,6 +90,20 @@ Common errors:
 - `invalid-geometry`: an editable element is missing explicit pixel geometry.
 - `missing-asset`: an image source is missing or cannot be read.
 
+Diagnostics may include:
+
+- `path`: the protocol path, such as `ppt-deck > ppt-slide > ppt-text`.
+- `line` and `column`: 1-based source location for tag-level protocol errors.
+- `property` and `value`: the CSS property, attribute, or value that triggered the error.
+- `suggestion`: a short fix hint intended for humans and agent retry loops.
+
+CLI output prints suggestions as a second line:
+
+```text
+[invalid-geometry] 3:5 at ppt-deck > ppt-slide > ppt-text (left: 10%) <ppt-text> requires explicit left geometry in px.
+  fix: Set left with an explicit pixel value, for example left:80px.
+```
+
 ## Example
 
 See `fixtures/showcase.html` for a multi-slide deck that uses titles, paragraphs, bullet lists, shapes, backgrounds, and inline styled runs.

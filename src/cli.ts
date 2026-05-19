@@ -66,8 +66,12 @@ main(process.argv.slice(2)).catch((error: unknown) => {
     console.error(error.message);
     for (const diagnostic of error.diagnostics) {
       const location = diagnostic.path ? ` at ${diagnostic.path}` : "";
+      const source = diagnostic.line ? ` ${diagnostic.line}:${diagnostic.column ?? 1}` : "";
       const property = diagnostic.property ? ` (${diagnostic.property}${diagnostic.value ? `: ${diagnostic.value}` : ""})` : "";
-      console.error(`[${diagnostic.code}]${location}${property} ${diagnostic.message}`);
+      console.error(`[${diagnostic.code}]${source}${location}${property} ${diagnostic.message}`);
+      if (diagnostic.suggestion) {
+        console.error(`  fix: ${diagnostic.suggestion}`);
+      }
     }
   } else {
     console.error(error instanceof Error ? error.stack ?? error.message : String(error));

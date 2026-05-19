@@ -118,7 +118,8 @@ describe("convertHtmlToPptx", () => {
         expect.objectContaining({
           code: "missing-asset",
           property: "src",
-          value: "./missing.png"
+          value: "./missing.png",
+          suggestion: expect.stringContaining("update src")
         })
       ]
     });

@@ -8,6 +8,9 @@ export interface Diagnostic {
   property?: string;
   value?: string;
   path?: string;
+  line?: number;
+  column?: number;
+  suggestion?: string;
 }
 
 export interface ProtocolValidationResult {

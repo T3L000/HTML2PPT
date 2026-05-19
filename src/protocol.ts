@@ -57,6 +57,8 @@ interface ParsedTag {
   attrs: Record<string, string>;
   closing: boolean;
   selfClosing: boolean;
+  line: number;
+  column: number;
 }
 
 export function validateHtmlProtocol(html: string): ProtocolValidationResult {
@@ -84,7 +86,9 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
         code: "unsupported-element",
         message: `Unsupported element <${token.name}>. V1 only supports ppt-deck, ppt-slide, ppt-text, ppt-list, ppt-li, ppt-image, ppt-shape, and span.`,
         element: token.name,
-        path
+        path,
+        ...locationFor(token),
+        suggestion: "Replace this tag with a supported ppt-* element, or pre-render that content into a supported text, image, shape, or list."
       });
     }
 
@@ -96,7 +100,9 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
           code: "invalid-parent",
           message: "<ppt-deck> must be the root element.",
           element: token.name,
-          path
+          path,
+          ...locationFor(token),
+          suggestion: "Move <ppt-deck> to the document root and keep all slides inside it."
         });
       }
     }
@@ -109,7 +115,9 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
           code: "invalid-parent",
           message: "<ppt-slide> must be a direct child of <ppt-deck>.",
           element: token.name,
-          path
+          path,
+          ...locationFor(token),
+          suggestion: "Move this <ppt-slide> directly under the single <ppt-deck> root."
         });
       }
     }
@@ -120,7 +128,9 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
         code: "invalid-parent",
         message: `<${token.name}> must be a direct child of <ppt-slide>.`,
         element: token.name,
-        path
+        path,
+        ...locationFor(token),
+        suggestion: `Move <${token.name}> so it is directly inside a <ppt-slide>.`
       });
     }
 
@@ -130,7 +140,9 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
         code: "invalid-parent",
         message: "<ppt-li> must be a direct child of <ppt-list>.",
         element: token.name,
-        path
+        path,
+        ...locationFor(token),
+        suggestion: "Wrap this <ppt-li> in a <ppt-list> with explicit pixel geometry."
       });
     }
 
@@ -140,7 +152,9 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
         code: "invalid-parent",
         message: "<span> is only supported inside <ppt-text> or <ppt-li>.",
         element: token.name,
-        path
+        path,
+        ...locationFor(token),
+        suggestion: "Move this <span> inside <ppt-text> or <ppt-li>, or remove the wrapper."
       });
     }
 
@@ -155,7 +169,8 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
     diagnostics.push({
       severity: "error",
       code: "missing-deck",
-      message: "Input must contain a <ppt-deck> root element."
+      message: "Input must contain a <ppt-deck> root element.",
+      suggestion: "Wrap the entire document in <ppt-deck size=\"wide\">...</ppt-deck>."
     });
   }
 
@@ -164,7 +179,8 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
       severity: "error",
       code: "multiple-decks",
       message: "Input must contain exactly one <ppt-deck> element.",
-      element: "ppt-deck"
+      element: "ppt-deck",
+      suggestion: "Merge all slides under one <ppt-deck> root."
     });
   }
 
@@ -173,7 +189,8 @@ export function validateHtmlProtocol(html: string): ProtocolValidationResult {
       severity: "error",
       code: "missing-slide",
       message: "<ppt-deck> must contain at least one <ppt-slide>.",
-      element: "ppt-slide"
+      element: "ppt-slide",
+      suggestion: "Add at least one <ppt-slide> direct child inside <ppt-deck>."
     });
   }
 
@@ -196,7 +213,9 @@ function validateAttributes(token: ParsedTag, path: string, diagnostics: Diagnos
         element: token.name,
         property,
         value,
-        path
+        path,
+        ...locationFor(token),
+        suggestion: `Remove "${property}" or replace it with one of the supported styles for <${token.name}>.`
       });
       continue;
     }
@@ -209,7 +228,9 @@ function validateAttributes(token: ParsedTag, path: string, diagnostics: Diagnos
         element: token.name,
         property,
         value,
-        path
+        path,
+        ...locationFor(token),
+        suggestion: "Use a flat hex/rgb color or a supported editable shape instead of gradients."
       });
     }
   }
@@ -225,7 +246,9 @@ function validateAttributes(token: ParsedTag, path: string, diagnostics: Diagnos
           element: token.name,
           property,
           value,
-          path
+          path,
+          ...locationFor(token),
+          suggestion: `Set ${property} with an explicit pixel value, for example ${property}:80px.`
         });
       }
     }
@@ -241,7 +264,9 @@ function validateAttributes(token: ParsedTag, path: string, diagnostics: Diagnos
         element: token.name,
         property: "fit",
         value: fit,
-        path
+        path,
+        ...locationFor(token),
+        suggestion: 'Use fit="contain", fit="cover", or fit="fill".'
       });
     }
     if (!token.attrs.src) {
@@ -251,7 +276,9 @@ function validateAttributes(token: ParsedTag, path: string, diagnostics: Diagnos
         message: "<ppt-image> requires a src attribute.",
         element: token.name,
         property: "src",
-        path
+        path,
+        ...locationFor(token),
+        suggestion: 'Add src="./image.png" or a data:image/... URL.'
       });
     }
   }
@@ -264,7 +291,9 @@ function validateAttributes(token: ParsedTag, path: string, diagnostics: Diagnos
       element: token.name,
       property: "padding-left",
       value: style["padding-left"],
-      path
+      path,
+      ...locationFor(token),
+      suggestion: "Use padding-left with px, for example padding-left:28px."
     });
   }
 
@@ -278,7 +307,9 @@ function validateAttributes(token: ParsedTag, path: string, diagnostics: Diagnos
         element: token.name,
         property: "kind",
         value: kind,
-        path
+        path,
+        ...locationFor(token),
+        suggestion: 'Use kind="rect", kind="roundRect", kind="ellipse", or kind="line".'
       });
     }
   }
@@ -326,7 +357,8 @@ function parseTags(html: string): ParsedTag[] {
       name: (match[2] ?? "").toLowerCase(),
       attrs: parseAttributes(rawAttrs),
       closing: Boolean(match[1]),
-      selfClosing: /\/\s*>$/.test(match[0])
+      selfClosing: /\/\s*>$/.test(match[0]),
+      ...lineColumnAt(html, match.index)
     });
   }
 
@@ -344,6 +376,22 @@ function parseAttributes(rawAttrs: string): Record<string, string> {
   }
 
   return attrs;
+}
+
+function locationFor(token: ParsedTag): Pick<Diagnostic, "line" | "column"> {
+  return {
+    line: token.line,
+    column: token.column
+  };
+}
+
+function lineColumnAt(text: string, index: number): { line: number; column: number } {
+  const before = text.slice(0, index);
+  const lines = before.split(/\r\n|\n|\r/);
+  return {
+    line: lines.length,
+    column: (lines.at(-1)?.length ?? 0) + 1
+  };
 }
 
 function unwindStack(openStack: string[], closingTag: string): void {

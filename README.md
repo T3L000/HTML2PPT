@@ -42,5 +42,6 @@ await convertHtmlToPptx({
 ```
 
 V1 is strict and editable-first. Unsupported elements and CSS properties fail with diagnostics instead of falling back to screenshots.
+CLI diagnostics include the error code, source line/column when available, protocol path, offending property/value, and a `fix:` suggestion.
 
 See [docs/protocol-v1.md](docs/protocol-v1.md) for the supported tags, attributes, styles, and diagnostics.

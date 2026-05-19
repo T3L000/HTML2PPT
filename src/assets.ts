@@ -22,7 +22,8 @@ export async function validateAssets(deck: DeckLayout, baseDir: string): Promise
           element: "ppt-image",
           property: "src",
           value: element.src,
-          path: `ppt-deck > ppt-slide:nth-child(${slideIndex + 1}) > ppt-image:nth-child(${elementIndex + 1})`
+          path: `ppt-deck > ppt-slide:nth-child(${slideIndex + 1}) > ppt-image:nth-child(${elementIndex + 1})`,
+          suggestion: `Place the image at ${filePath}, update src to the correct relative path, or use a data:image/... URL.`
         });
       }
     }

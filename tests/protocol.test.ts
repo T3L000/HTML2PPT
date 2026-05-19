@@ -78,7 +78,10 @@ describe("validateHtmlProtocol", () => {
         code: "unsupported-style",
         element: "ppt-text",
         property: "filter",
-        value: "blur(2px)"
+        value: "blur(2px)",
+        line: 4,
+        column: 11,
+        suggestion: expect.stringContaining("Remove")
       })
     );
   });
@@ -97,7 +100,8 @@ describe("validateHtmlProtocol", () => {
       expect.objectContaining({
         code: "invalid-geometry",
         property: "left",
-        value: "10%"
+        value: "10%",
+        suggestion: expect.stringContaining("left:80px")
       })
     );
   });
