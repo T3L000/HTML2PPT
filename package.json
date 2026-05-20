@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "dom-to-pptx": "^1.1.9",
     "playwright": "^1.55.0",
     "pptxgenjs": "^4.0.1"
   },

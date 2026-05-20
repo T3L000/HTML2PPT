@@ -108,8 +108,9 @@ export interface ConvertHtmlToPptxSource {
   baseDir?: string;
   outputPath?: string;
   templateData?: TemplateData;
-  mode?: "protocol" | "screenshot";
+  mode?: "protocol" | "screenshot" | "dom";
   screenshot?: ScreenshotDeckOptions;
+  dom?: DomDeckOptions;
 }
 
 export interface ConvertHtmlToPptxResult {
@@ -128,6 +129,20 @@ export interface ScreenshotDeckOptions {
 
 export interface ScreenshotSlide {
   png: Buffer;
+}
+
+export interface DomDeckOptions {
+  selector?: string;
+  width?: number;
+  height?: number;
+  waitMs?: number;
+  autoEmbedFonts?: boolean;
+  svgAsVector?: boolean;
+}
+
+export interface DomDeckExportResult {
+  buffer: Buffer;
+  slideCount: number;
 }
 
 export type TemplatePrimitive = string | number | boolean | null;

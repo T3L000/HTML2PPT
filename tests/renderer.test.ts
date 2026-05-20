@@ -225,4 +225,49 @@ describe("convertHtmlToPptx", () => {
     expect(zip.file("ppt/slides/slide2.xml")).toBeTruthy();
     expect(Object.keys(zip.files).filter((name) => name.startsWith("ppt/media/image"))).toHaveLength(2);
   });
+
+  test("renders normal HTML sections with experimental editable DOM mode", async () => {
+    const result = await convertHtmlToPptx({
+      mode: "dom",
+      html: `
+        <!doctype html>
+        <html>
+          <head>
+            <style>
+              html, body { margin: 0; width: 1280px; height: 720px; background: #222; }
+              .stage { display: flex; flex-direction: column; gap: 24px; }
+              section.slide { width: 1280px; height: 720px; position: relative; overflow: hidden; background: #f4efe6; color: #111; }
+              h1 { position: absolute; left: 80px; top: 60px; margin: 0; font-size: 68px; }
+              .card { position: absolute; left: 90px; top: 210px; width: 460px; height: 220px; border-radius: 24px; background: #ffffff; padding: 30px; }
+              .metric { position: absolute; right: 100px; top: 230px; font-size: 54px; font-weight: 700; color: #0057ff; }
+            </style>
+          </head>
+          <body>
+            <main class="stage">
+              <section class="slide">
+                <h1>DOM Editable Test</h1>
+                <div class="card">This text should remain editable.</div>
+                <div class="metric">88%</div>
+              </section>
+              <section class="slide">
+                <h1>Second DOM Slide</h1>
+              </section>
+            </main>
+          </body>
+        </html>
+      `
+    });
+
+    expect(result.slideCount).toBe(2);
+    const zip = await JSZip.loadAsync(result.buffer);
+    const slideXml = [
+      await zip.file("ppt/slides/slide1.xml")?.async("string"),
+      await zip.file("ppt/slides/slide2.xml")?.async("string")
+    ].join("\n");
+
+    expect(slideXml).toContain("DOM Editable Test");
+    expect(slideXml).toContain("This text should remain editable.");
+    expect(slideXml).toContain("Second DOM Slide");
+    expect(slideXml).toContain("<p:sp");
+  });
 });

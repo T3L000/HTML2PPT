@@ -52,15 +52,15 @@ Keep the current split:
 - `screenshot` mode: high-fidelity compatibility for arbitrary `section.slide` HTML decks.
 - Proposed next mode: `dom` or `html-editable`, powered by `dom-to-pptx`, for experimental editable export of normal HTML decks.
 
-## Proposed Next Step
+## Implemented Next Step
 
-Implement V1.7 as an experimental adapter:
+V1.7 implements this as an experimental adapter:
 
 ```bash
-node dist/cli.js deck.html -o deck.pptx --mode dom
+node dist/cli.js deck.html -o deck-editable.pptx --mode dom
 ```
 
-The first version should:
+The first version:
 
 - Use Playwright to load the HTML.
 - Inject the local `dom-to-pptx` bundle.

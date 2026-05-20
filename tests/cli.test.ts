@@ -141,4 +141,44 @@ describe("CLI", () => {
     expect(stdout).toContain("Wrote");
     expect(stdout).toContain("2 slides");
   });
+
+  test("converts normal HTML slides with experimental DOM mode", async () => {
+    await rm("tmp/tests-cli", { recursive: true, force: true });
+    await mkdir("tmp/tests-cli", { recursive: true });
+    const inputPath = path.resolve("tmp/tests-cli/dom-deck.html");
+    const outputPath = path.resolve("tmp/tests-cli/dom-deck.pptx");
+    await writeFile(
+      inputPath,
+      `<!doctype html>
+<html>
+  <head>
+    <style>
+      html, body { margin: 0; width: 1280px; height: 720px; background: #222; }
+      section.slide { width: 1280px; height: 720px; position: relative; background: #f6f0e4; color: #111; overflow: hidden; }
+      h1 { position: absolute; left: 80px; top: 60px; margin: 0; font-size: 64px; }
+      .box { position: absolute; left: 96px; top: 210px; width: 480px; height: 180px; border-radius: 20px; background: white; padding: 28px; font-size: 30px; }
+    </style>
+  </head>
+  <body>
+    <section class="slide">
+      <h1>DOM CLI Deck</h1>
+      <div class="box">Editable DOM export</div>
+    </section>
+  </body>
+</html>`
+    );
+
+    await execFileAsync(cmd, ["/c", "npm.cmd", "run", "build"]);
+    const { stdout } = await execFileAsync("node", [
+      "dist/cli.js",
+      inputPath,
+      "-o",
+      outputPath,
+      "--mode",
+      "dom"
+    ]);
+
+    expect(stdout).toContain("Wrote");
+    expect(stdout).toContain("1 slide");
+  });
 });

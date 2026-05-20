@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { Html2PptError, convertHtmlToPptx, extractHtmlDeckScreenshots, extractLayout } from "./index.js";
+import {
+  Html2PptError,
+  convertHtmlToPptx,
+  exportHtmlDeckDomPptx,
+  extractHtmlDeckScreenshots,
+  extractLayout
+} from "./index.js";
 import type { ConvertHtmlToPptxSource, TemplateData } from "./types.js";
 
 interface CliOptions {
@@ -28,6 +34,7 @@ async function main(argv: string[]): Promise<void> {
   } finally {
     await extractLayout.dispose();
     await extractHtmlDeckScreenshots.dispose();
+    await exportHtmlDeckDomPptx.dispose();
   }
 }
 
@@ -62,8 +69,8 @@ function parseArgs(argv: string[]): CliOptions {
     }
     if (arg === "--mode") {
       const rawMode = args.shift();
-      if (rawMode !== "protocol" && rawMode !== "screenshot") {
-        throw new Html2PptError(`--mode must be "protocol" or "screenshot".\n${usage()}`);
+      if (rawMode !== "protocol" && rawMode !== "screenshot" && rawMode !== "dom") {
+        throw new Html2PptError(`--mode must be "protocol", "screenshot", or "dom".\n${usage()}`);
       }
       mode = rawMode;
       continue;
@@ -89,7 +96,7 @@ function parseArgs(argv: string[]): CliOptions {
 }
 
 function usage(): string {
-  return "Usage: html2ppt <input.html> -o <output.pptx> [--base-dir <dir>] [--data <data.json>] [--mode protocol|screenshot]";
+  return "Usage: html2ppt <input.html> -o <output.pptx> [--base-dir <dir>] [--data <data.json>] [--mode protocol|screenshot|dom]";
 }
 
 async function loadTemplateData(dataPath: string): Promise<TemplateData> {

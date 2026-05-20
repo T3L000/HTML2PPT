@@ -11,6 +11,7 @@ node dist/cli.js fixtures/basic.html -o tmp/basic.pptx --base-dir .
 node dist/cli.js fixtures/showcase.html -o tmp/showcase.pptx --base-dir .
 node dist/cli.js fixtures/template.html -o tmp/template.pptx --data fixtures/template-data.json --base-dir .
 node dist/cli.js path/to/html-deck.html -o tmp/html-deck.pptx --mode screenshot
+node dist/cli.js path/to/html-deck.html -o tmp/html-deck-editable.pptx --mode dom
 ```
 
 The package also exposes a library API:
@@ -39,6 +40,14 @@ node dist/cli.js tmp/guizang-ppt-skill/assets/template-swiss.html -o tmp/guizang
 ```
 
 Screenshot mode looks for `section.slide`, captures each slide at 1280x720, and inserts each capture as a full-slide PNG. This is compatibility/high-fidelity mode, so the resulting slide visuals are not editable PowerPoint objects yet.
+
+Experimental DOM mode uses `dom-to-pptx` to convert normal `section.slide` HTML decks into editable PowerPoint text, shapes, and images when possible:
+
+```bash
+node dist/cli.js tmp/guizang-ppt-skill/assets/template-swiss.html -o tmp/guizang-swiss-editable.pptx --mode dom
+```
+
+DOM mode is best for existing HTML decks that need some editability. It is still experimental because arbitrary CSS, browser effects, fonts, and scripts can produce approximations. If visual fidelity matters more than editability, use `--mode screenshot`.
 
 ## V1 HTML Protocol
 

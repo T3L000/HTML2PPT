@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { validateAssets } from "./assets.js";
+import { exportHtmlDeckDomPptx } from "./dom.js";
 import { Html2PptError } from "./errors.js";
 import { extractLayout } from "./layout.js";
 import { renderPptx, renderScreenshotPptx } from "./renderer.js";
@@ -13,6 +14,8 @@ export type {
   ConvertHtmlToPptxSource,
   DeckLayout,
   Diagnostic,
+  DomDeckExportResult,
+  DomDeckOptions,
   ImageElement,
   ListElement,
   ListItem,
@@ -27,6 +30,7 @@ export type {
   TextElement
 } from "./types.js";
 export { Html2PptError } from "./errors.js";
+export { exportHtmlDeckDomPptx } from "./dom.js";
 export { extractLayout } from "./layout.js";
 export { extractHtmlDeckScreenshots } from "./screenshot.js";
 export { renderTemplate } from "./template.js";
@@ -58,6 +62,27 @@ export async function convertHtmlToPptx(source: ConvertHtmlToPptxSource): Promis
     return {
       buffer,
       slideCount: screenshots.length,
+      diagnostics: [] satisfies Diagnostic[],
+      writtenPath: source.outputPath
+    };
+  }
+
+  if (source.mode === "dom") {
+    const shouldUseRenderedHtml = Boolean(source.html || source.templateData);
+    const result = await exportHtmlDeckDomPptx({
+      html: shouldUseRenderedHtml ? html : undefined,
+      filePath: shouldUseRenderedHtml ? undefined : source.filePath,
+      baseDir,
+      options: source.dom
+    });
+    if (source.outputPath) {
+      await mkdir(path.dirname(source.outputPath), { recursive: true });
+      await writeFile(source.outputPath, result.buffer);
+    }
+
+    return {
+      buffer: result.buffer,
+      slideCount: result.slideCount,
       diagnostics: [] satisfies Diagnostic[],
       writtenPath: source.outputPath
     };
