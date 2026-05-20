@@ -25,6 +25,7 @@
 
 ## Current State
 - V1.5 TypeScript package includes CLI, library API, protocol validation, template variables, Playwright layout extraction, pptxgenjs rendering, editable bullet lists, grouped relative layout, actionable diagnostics, screenshot mode for `section.slide` HTML decks, tests, fixtures, and README/docs.
+- V1.6 evaluation found `dom-to-pptx@1.1.9` can export normal HTML decks with editable text/shapes. `html2pptx@0.0.5` is only a rich-text snippet converter, not a full-slide layout converter.
 
 ## Recent Notes
 - 2026-05-19: Implementation started from the approved html2ppt plan.
@@ -34,3 +35,4 @@
 - 2026-05-19: Added `ppt-group` as an authoring-only relative layout container flattened into editable PPT objects.
 - 2026-05-19: Added `{{variable}}` / `{{nested.value}}` template rendering through library `templateData` and CLI `--data`.
 - 2026-05-20: Added screenshot mode for existing HTML decks such as `guizang-ppt-skill`, using `section.slide` screenshots as full-slide PPT images.
+- 2026-05-20: Evaluated existing editable HTML-to-PPTX candidates. `dom-to-pptx` is the best next adapter candidate; `html2pptx` is not suitable for whole-slide conversion.
