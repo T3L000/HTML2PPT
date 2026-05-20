@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { Html2PptError, convertHtmlToPptx, extractLayout } from "./index.js";
-import type { TemplateData } from "./types.js";
+import { Html2PptError, convertHtmlToPptx, extractHtmlDeckScreenshots, extractLayout } from "./index.js";
+import type { ConvertHtmlToPptxSource, TemplateData } from "./types.js";
 
 interface CliOptions {
   inputPath: string;
   outputPath: string;
   baseDir?: string;
   dataPath?: string;
+  mode?: ConvertHtmlToPptxSource["mode"];
 }
 
 async function main(argv: string[]): Promise<void> {
@@ -19,12 +20,14 @@ async function main(argv: string[]): Promise<void> {
       filePath: options.inputPath,
       outputPath: options.outputPath,
       baseDir: options.baseDir,
-      templateData
+      templateData,
+      mode: options.mode
     });
     const slideLabel = result.slideCount === 1 ? "slide" : "slides";
     console.log(`Wrote ${result.writtenPath} (${result.slideCount} ${slideLabel})`);
   } finally {
     await extractLayout.dispose();
+    await extractHtmlDeckScreenshots.dispose();
   }
 }
 
@@ -38,6 +41,7 @@ function parseArgs(argv: string[]): CliOptions {
   let outputPath: string | undefined;
   let baseDir: string | undefined;
   let dataPath: string | undefined;
+  let mode: ConvertHtmlToPptxSource["mode"];
 
   while (args.length > 0) {
     const arg = args.shift();
@@ -56,6 +60,18 @@ function parseArgs(argv: string[]): CliOptions {
       }
       continue;
     }
+    if (arg === "--mode") {
+      const rawMode = args.shift();
+      if (rawMode !== "protocol" && rawMode !== "screenshot") {
+        throw new Html2PptError(`--mode must be "protocol" or "screenshot".\n${usage()}`);
+      }
+      mode = rawMode;
+      continue;
+    }
+    if (arg === "--screenshot") {
+      mode = "screenshot";
+      continue;
+    }
     throw new Html2PptError(`Unknown argument: ${arg}\n${usage()}`);
   }
 
@@ -67,12 +83,13 @@ function parseArgs(argv: string[]): CliOptions {
     inputPath: path.resolve(inputPath),
     outputPath: path.resolve(outputPath),
     baseDir,
-    dataPath: dataPath ? path.resolve(dataPath) : undefined
+    dataPath: dataPath ? path.resolve(dataPath) : undefined,
+    mode
   };
 }
 
 function usage(): string {
-  return "Usage: html2ppt <input.html> -o <output.pptx> [--base-dir <dir>] [--data <data.json>]";
+  return "Usage: html2ppt <input.html> -o <output.pptx> [--base-dir <dir>] [--data <data.json>] [--mode protocol|screenshot]";
 }
 
 async function loadTemplateData(dataPath: string): Promise<TemplateData> {

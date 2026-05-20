@@ -3,7 +3,8 @@ import path from "node:path";
 import { validateAssets } from "./assets.js";
 import { Html2PptError } from "./errors.js";
 import { extractLayout } from "./layout.js";
-import { renderPptx } from "./renderer.js";
+import { renderPptx, renderScreenshotPptx } from "./renderer.js";
+import { extractHtmlDeckScreenshots } from "./screenshot.js";
 import { renderTemplate } from "./template.js";
 import type { ConvertHtmlToPptxResult, ConvertHtmlToPptxSource, Diagnostic } from "./types.js";
 
@@ -18,6 +19,8 @@ export type {
   ShapeElement,
   SlideElement,
   SlideLayout,
+  ScreenshotDeckOptions,
+  ScreenshotSlide,
   TemplateData,
   TemplatePrimitive,
   TemplateValue,
@@ -25,6 +28,7 @@ export type {
 } from "./types.js";
 export { Html2PptError } from "./errors.js";
 export { extractLayout } from "./layout.js";
+export { extractHtmlDeckScreenshots } from "./screenshot.js";
 export { renderTemplate } from "./template.js";
 export { validateHtmlProtocol } from "./protocol.js";
 
@@ -36,6 +40,28 @@ export async function convertHtmlToPptx(source: ConvertHtmlToPptxSource): Promis
   }
   const html = template.html;
   const baseDir = path.resolve(source.baseDir ?? (source.filePath ? path.dirname(source.filePath) : "."));
+
+  if (source.mode === "screenshot") {
+    const shouldUseRenderedHtml = Boolean(source.html || source.templateData);
+    const screenshots = await extractHtmlDeckScreenshots({
+      html: shouldUseRenderedHtml ? html : undefined,
+      filePath: shouldUseRenderedHtml ? undefined : source.filePath,
+      baseDir,
+      options: source.screenshot
+    });
+    const buffer = await renderScreenshotPptx(screenshots);
+    if (source.outputPath) {
+      await mkdir(path.dirname(source.outputPath), { recursive: true });
+      await writeFile(source.outputPath, buffer);
+    }
+
+    return {
+      buffer,
+      slideCount: screenshots.length,
+      diagnostics: [] satisfies Diagnostic[],
+      writtenPath: source.outputPath
+    };
+  }
 
   let deck;
   try {

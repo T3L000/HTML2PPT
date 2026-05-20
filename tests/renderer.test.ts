@@ -193,4 +193,36 @@ describe("convertHtmlToPptx", () => {
       ]
     });
   });
+
+  test("renders normal HTML sections as full-slide screenshots", async () => {
+    const result = await convertHtmlToPptx({
+      mode: "screenshot",
+      html: `
+        <!doctype html>
+        <html>
+          <head>
+            <style>
+              html, body { margin: 0; width: 1280px; height: 720px; overflow: hidden; }
+              #deck { display: flex; width: 200vw; height: 100vh; }
+              section.slide { width: 100vw; height: 100vh; flex: 0 0 100vw; display: grid; place-items: center; font: 72px Georgia; }
+              .a { background: #111; color: white; }
+              .b { background: #eee; color: #111; }
+            </style>
+          </head>
+          <body>
+            <main id="deck">
+              <section class="slide a">Slide A</section>
+              <section class="slide b">Slide B</section>
+            </main>
+          </body>
+        </html>
+      `
+    });
+
+    expect(result.slideCount).toBe(2);
+    const zip = await JSZip.loadAsync(result.buffer);
+    expect(zip.file("ppt/slides/slide1.xml")).toBeTruthy();
+    expect(zip.file("ppt/slides/slide2.xml")).toBeTruthy();
+    expect(Object.keys(zip.files).filter((name) => name.startsWith("ppt/media/image"))).toHaveLength(2);
+  });
 });

@@ -100,4 +100,45 @@ describe("CLI", () => {
     expect(stdout).toContain("Wrote");
     expect(stdout).toContain("1 slide");
   });
+
+  test("converts normal HTML slides with screenshot mode", async () => {
+    await rm("tmp/tests-cli", { recursive: true, force: true });
+    await mkdir("tmp/tests-cli", { recursive: true });
+    const inputPath = path.resolve("tmp/tests-cli/html-deck.html");
+    const outputPath = path.resolve("tmp/tests-cli/html-deck.pptx");
+    await writeFile(
+      inputPath,
+      `<!doctype html>
+<html>
+  <head>
+    <style>
+      html, body { margin: 0; width: 1280px; height: 720px; overflow: hidden; }
+      #deck { display: flex; width: 200vw; height: 100vh; }
+      section.slide { width: 100vw; height: 100vh; flex: 0 0 100vw; display: grid; place-items: center; font: 64px serif; }
+      .one { background: #102030; color: white; }
+      .two { background: #f3efe7; color: #102030; }
+    </style>
+  </head>
+  <body>
+    <main id="deck">
+      <section class="slide one">One</section>
+      <section class="slide two">Two</section>
+    </main>
+  </body>
+</html>`
+    );
+
+    await execFileAsync(cmd, ["/c", "npm.cmd", "run", "build"]);
+    const { stdout } = await execFileAsync("node", [
+      "dist/cli.js",
+      inputPath,
+      "-o",
+      outputPath,
+      "--mode",
+      "screenshot"
+    ]);
+
+    expect(stdout).toContain("Wrote");
+    expect(stdout).toContain("2 slides");
+  });
 });

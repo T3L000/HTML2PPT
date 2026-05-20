@@ -1,6 +1,6 @@
 import PptxGenJS from "pptxgenjs";
 import { resolveImageSource } from "./assets.js";
-import type { DeckLayout, ListElement, ShapeElement, SlideElement, TextElement } from "./types.js";
+import type { DeckLayout, ListElement, ScreenshotSlide, ShapeElement, SlideElement, TextElement } from "./types.js";
 
 const pxPerInch = 96;
 const pointsPerPx = 0.75;
@@ -39,6 +39,28 @@ export async function renderPptx(deck: DeckLayout, baseDir: string): Promise<Buf
     for (const element of deckSlide.elements) {
       renderElement(pptx, slide, element, baseDir);
     }
+  }
+
+  const output = await pptx.write({ outputType: "nodebuffer" });
+  return Buffer.isBuffer(output) ? output : Buffer.from(output as Uint8Array);
+}
+
+export async function renderScreenshotPptx(screenshots: ScreenshotSlide[]): Promise<Buffer> {
+  const pptx = new PptxGen();
+  pptx.layout = "LAYOUT_WIDE";
+  pptx.author = "html2ppt";
+  pptx.subject = "Generated from HTML deck screenshots";
+  pptx.title = "html2ppt screenshot deck";
+
+  for (const screenshot of screenshots) {
+    const slide = pptx.addSlide();
+    slide.addImage({
+      data: `data:image/png;base64,${screenshot.png.toString("base64")}`,
+      x: 0,
+      y: 0,
+      w: 1280 / pxPerInch,
+      h: 720 / pxPerInch
+    });
   }
 
   const output = await pptx.write({ outputType: "nodebuffer" });

@@ -10,6 +10,7 @@ npm.cmd run build
 node dist/cli.js fixtures/basic.html -o tmp/basic.pptx --base-dir .
 node dist/cli.js fixtures/showcase.html -o tmp/showcase.pptx --base-dir .
 node dist/cli.js fixtures/template.html -o tmp/template.pptx --data fixtures/template-data.json --base-dir .
+node dist/cli.js path/to/html-deck.html -o tmp/html-deck.pptx --mode screenshot
 ```
 
 The package also exposes a library API:
@@ -26,6 +27,18 @@ await convertHtmlToPptx({
   }
 });
 ```
+
+## Screenshot Mode For Existing HTML Decks
+
+Default mode is `protocol`: it requires the editable `ppt-*` HTML protocol and exports native PowerPoint text, shapes, lists, and images.
+
+For existing webpage-style decks, use screenshot mode:
+
+```bash
+node dist/cli.js tmp/guizang-ppt-skill/assets/template-swiss.html -o tmp/guizang-swiss.pptx --mode screenshot
+```
+
+Screenshot mode looks for `section.slide`, captures each slide at 1280x720, and inserts each capture as a full-slide PNG. This is compatibility/high-fidelity mode, so the resulting slide visuals are not editable PowerPoint objects yet.
 
 ## V1 HTML Protocol
 

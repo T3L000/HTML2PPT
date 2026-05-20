@@ -108,6 +108,8 @@ export interface ConvertHtmlToPptxSource {
   baseDir?: string;
   outputPath?: string;
   templateData?: TemplateData;
+  mode?: "protocol" | "screenshot";
+  screenshot?: ScreenshotDeckOptions;
 }
 
 export interface ConvertHtmlToPptxResult {
@@ -115,6 +117,17 @@ export interface ConvertHtmlToPptxResult {
   slideCount: number;
   diagnostics: Diagnostic[];
   writtenPath?: string;
+}
+
+export interface ScreenshotDeckOptions {
+  selector?: string;
+  width?: number;
+  height?: number;
+  waitMs?: number;
+}
+
+export interface ScreenshotSlide {
+  png: Buffer;
 }
 
 export type TemplatePrimitive = string | number | boolean | null;
